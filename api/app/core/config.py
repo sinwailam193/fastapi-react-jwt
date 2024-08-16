@@ -1,4 +1,19 @@
+from enum import Enum
 from pydantic_settings import BaseSettings
+
+
+class GenreURLChoices(Enum):
+    ROCK = "rock"
+    ELECTRONIC = "electronic"
+    METAL = "metal"
+    HIP_HOP = "hip-hop"
+
+
+class GenreChoices(Enum):
+    ROCK = "Rock"
+    ELECTRONIC = "Electronic"
+    METAL = "Metal"
+    HIP_HOP = "Hip-Hop"
 
 
 class Settings(BaseSettings):
