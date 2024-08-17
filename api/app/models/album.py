@@ -1,5 +1,5 @@
 from datetime import date
-from pydantic import BaseModel, field_validator
+from pydantic import field_validator, validator
 from sqlmodel import SQLModel, Field, Relationship
 
 from app.core.config import GenreChoices
@@ -24,7 +24,7 @@ class BandBase(SQLModel):
 class BandCreate(BandBase):
     albums: list[AlbumBase] | None = None
 
-    @field_validator("genre", pre=True)
+    @field_validator("genre", mode="before")
     def title_case_genre(cls, value):
         return value.title()
 
