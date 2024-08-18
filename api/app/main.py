@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 from .core.config import settings
 from .core.db import init_db
 from .routes.main import api_router
-import app.models.album
 
 
 @asynccontextmanager

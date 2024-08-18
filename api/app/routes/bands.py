@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from ..core.db import get_session
-from ..models.album import Band, BandCreate, Album
+from ..models.band_album import Band, BandCreate, Album
 
 router = APIRouter()
 
