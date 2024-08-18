@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends
-from sqlmodel import Session
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, status, Path, Query
+from sqlmodel import Session, select
 
 from ..core.db import get_session
+from ..core.config import GenreChoices
 from ..models.band_album import Band, BandCreate, Album
 
 router = APIRouter()
@@ -23,4 +25,31 @@ async def create_band(
 
     session.commit()
     session.refresh(band)
+    return band
+
+
+@router.get("")
+async def get_band(
+    genre: GenreChoices | None = None,
+    q: Annotated[str | None, Query(max_length=10)] = None,
+    session: Session = Depends(get_session),
+) -> list[Band]:
+    if genre is not None:
+        band_list = session.exec(select(Band).where(Band.genre == genre))
+    else:
+        band_list = session.exec(select(Band)).all()
+
+    return band_list
+
+
+@router.get("/{band_id}")
+async def get_band(
+    band_id: Annotated[int, Path(title="The band ID")],
+    session: Session = Depends(get_session),
+) -> Band:
+    band = session.get(Band, band_id)
+    if band is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Band is not found"
+        )
     return band
