@@ -1,5 +1,5 @@
 from datetime import date
-from pydantic import field_validator, validator
+from pydantic import field_validator
 from sqlmodel import SQLModel, Field, Relationship
 
 from app.core.config import GenreChoices
@@ -8,12 +8,16 @@ from app.core.config import GenreChoices
 class AlbumBase(SQLModel):
     title: str
     release_date: date
-    band_id: int = Field(foreign_key="band.id")
 
 
 class Album(AlbumBase, table=True):
+    __tablename__ = "albums"
+
     id: int = Field(default=None, primary_key=True)
-    band: "Band" = Relationship(back_populates="albums")
+    band_id: int = Field(foreign_key="bands.id")  # "bands.id" is the actual foreign key
+    band: "Band" = Relationship(
+        back_populates="albums"
+    )  # "albums" here refer to the attribute field
 
 
 class BandBase(SQLModel):
@@ -30,5 +34,9 @@ class BandCreate(BandBase):
 
 
 class Band(BandBase, table=True):
+    __tablename__ = "bands"
+
     id: int = Field(default=None, primary_key=True)
-    albums: list[Album] = Relationship(back_populates="band")
+    albums: list[Album] = Relationship(
+        back_populates="band", cascade_delete=True
+    )  # "band" here refer to the attribute field
