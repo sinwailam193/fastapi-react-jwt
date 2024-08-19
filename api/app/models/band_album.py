@@ -1,6 +1,6 @@
 from datetime import date
 from pydantic import field_validator
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Column, Boolean, false
 
 from ..core.config import GenreChoices
 
@@ -8,6 +8,11 @@ from ..core.config import GenreChoices
 class BandBase(SQLModel):
     name: str
     genre: GenreChoices
+
+    # In order to add a default value of False need to use Column
+    is_done: bool = Field(
+        sa_column=Column(Boolean, server_default=false(), nullable=False)
+    )
 
 
 class Band(BandBase, table=True):
@@ -17,6 +22,7 @@ class Band(BandBase, table=True):
     albums: list["Album"] = Relationship(
         back_populates="band", cascade_delete=True
     )  # "band" here refer to the attribute field
+    date_formed: date | None = None
 
 
 class BandCreate(BandBase):
