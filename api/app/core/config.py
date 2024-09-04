@@ -1,5 +1,15 @@
+from os import getenv, path
+from pathlib import Path
+from dotenv import load_dotenv
 from enum import Enum
 from pydantic_settings import BaseSettings
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+dotenv_file = BASE_DIR / ".env"
+if path.isfile(dotenv_file):
+    load_dotenv(dotenv_file)
 
 
 class GenreChoices(Enum):

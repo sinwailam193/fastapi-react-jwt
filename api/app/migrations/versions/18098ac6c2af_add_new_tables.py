@@ -1,8 +1,8 @@
-"""initial migration
+"""Add new tables
 
-Revision ID: 5e3b8b685f83
+Revision ID: 18098ac6c2af
 Revises: 
-Create Date: 2024-08-19 11:52:55.021619
+Create Date: 2024-09-04 09:31:49.475080
 
 """
 
@@ -14,7 +14,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = "5e3b8b685f83"
+revision: str = "18098ac6c2af"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -30,7 +30,11 @@ def upgrade() -> None:
             sa.Enum("ROCK", "ELECTRONIC", "METAL", "HIP_HOP", name="genrechoices"),
             nullable=False,
         ),
+        sa.Column(
+            "is_done", sa.Boolean(), server_default=sa.text("false"), nullable=False
+        ),
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("date_formed", sa.Date(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(

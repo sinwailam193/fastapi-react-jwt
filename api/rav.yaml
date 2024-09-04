@@ -1,0 +1,3 @@
+scripts:
+    server: python asgi.py
+    migrate: alembic upgrade head
