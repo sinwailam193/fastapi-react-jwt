@@ -7,8 +7,9 @@ export const Route = createFileRoute("/_layout")({
 function Layout() {
     return (
         <div>
-            Layoutadsasdsa
+            Home
             <Outlet />
+            Layout
         </div>
     );
 }

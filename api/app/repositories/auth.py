@@ -1,7 +1,6 @@
 import time
-from typing import Dict, Any
-from fastapi import HTTPException, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials
 from datetime import timedelta, datetime, timezone
 from jose.jwt import encode, decode
 
@@ -43,5 +42,45 @@ class JWTRepo:
 
 
 class JWTBearer(HTTPException):
-    def __init__(self, auto_error: bool = True) -> None:
+    def __init__(self, auto_error: bool = True):
         super(JWTBearer, self).__init__(auto_error=auto_error)
+
+    async def __call__(self, request: Request):
+        credentials: HTTPAuthorizationCredentials = await super(
+            JWTBearer, self
+        ).__call__(request)
+        if credentials:
+            if credentials.scheme != "Bearer":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "status": "Forbidden",
+                        "message": "Invalid authentication schema.",
+                    },
+                )
+            if not self.verify_jwt(credentials.credentials):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "status": "Forbidden",
+                        "message": "Invalid token or expired token.",
+                    },
+                )
+            return credentials.credentials
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "status": "Forbidden",
+                    "message": "Invalid authorization code.",
+                },
+            )
+
+    @staticmethod
+    def verify_jwt(jwt_token: str):
+        return (
+            True
+            if decode(jwt_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            is not None
+            else False
+        )

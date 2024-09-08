@@ -18,6 +18,7 @@ import { Route as LayoutImport } from "./routes/_layout"
 // Create Virtual Routes
 
 const LayoutIndexLazyImport = createFileRoute("/_layout/")()
+const LayoutAboutLazyImport = createFileRoute("/_layout/about")()
 
 // Create/Update Routes
 
@@ -31,10 +32,18 @@ const LayoutIndexLazyRoute = LayoutIndexLazyImport.update({
   getParentRoute: () => LayoutRoute,
 }).lazy(() => import("./routes/_layout/index.lazy").then((d) => d.Route))
 
+const LayoutAboutLazyRoute = LayoutAboutLazyImport.update({
+  path: "/about",
+  getParentRoute: () => LayoutRoute,
+}).lazy(() => import("./routes/_layout/about.lazy").then((d) => d.Route))
+
 // Create and export the route tree
 
 export const routeTree = rootRoute.addChildren({
-  LayoutRoute: LayoutRoute.addChildren({ LayoutIndexLazyRoute }),
+  LayoutRoute: LayoutRoute.addChildren({
+    LayoutAboutLazyRoute,
+    LayoutIndexLazyRoute,
+  }),
 })
 
 /* prettier-ignore-end */
@@ -51,8 +60,13 @@ export const routeTree = rootRoute.addChildren({
     "/_layout": {
       "filePath": "_layout.jsx",
       "children": [
+        "/_layout/about",
         "/_layout/"
       ]
+    },
+    "/_layout/about": {
+      "filePath": "_layout/about.lazy.jsx",
+      "parent": "/_layout"
     },
     "/_layout/": {
       "filePath": "_layout/index.lazy.jsx",
