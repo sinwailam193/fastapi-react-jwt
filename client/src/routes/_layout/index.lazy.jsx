@@ -5,5 +5,7 @@ export const Route = createLazyFileRoute("/_layout/")({
 });
 
 function Home() {
+    const data = Route.useLoaderData();
+
     return <div className="text-red-400">Home route</div>;
 }

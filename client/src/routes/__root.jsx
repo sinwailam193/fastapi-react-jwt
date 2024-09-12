@@ -17,16 +17,11 @@ const TanStackRouterDevtools =
 
 function Layout() {
     return (
-        <div>
-            <div>RootRoute</div>
-            <div>
-                <Link to="/">Home</Link>
-                <Link to="/posts">Posts</Link>
-            </div>
+        <>
             <Outlet />
             <Suspense>
                 <TanStackRouterDevtools />
             </Suspense>
-        </div>
+        </>
     );
 }

@@ -14,10 +14,10 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import { Route as rootRoute } from "./routes/__root"
 import { Route as LayoutImport } from "./routes/_layout"
+import { Route as LayoutIndexImport } from "./routes/_layout/index"
 
 // Create Virtual Routes
 
-const LayoutIndexLazyImport = createFileRoute("/_layout/")()
 const LayoutAboutLazyImport = createFileRoute("/_layout/about")()
 
 // Create/Update Routes
@@ -27,7 +27,7 @@ const LayoutRoute = LayoutImport.update({
   getParentRoute: () => rootRoute,
 })
 
-const LayoutIndexLazyRoute = LayoutIndexLazyImport.update({
+const LayoutIndexRoute = LayoutIndexImport.update({
   path: "/",
   getParentRoute: () => LayoutRoute,
 }).lazy(() => import("./routes/_layout/index.lazy").then((d) => d.Route))
@@ -42,7 +42,7 @@ const LayoutAboutLazyRoute = LayoutAboutLazyImport.update({
 export const routeTree = rootRoute.addChildren({
   LayoutRoute: LayoutRoute.addChildren({
     LayoutAboutLazyRoute,
-    LayoutIndexLazyRoute,
+    LayoutIndexRoute,
   }),
 })
 
@@ -69,7 +69,7 @@ export const routeTree = rootRoute.addChildren({
       "parent": "/_layout"
     },
     "/_layout/": {
-      "filePath": "_layout/index.lazy.jsx",
+      "filePath": "_layout/index.jsx",
       "parent": "/_layout"
     }
   }
