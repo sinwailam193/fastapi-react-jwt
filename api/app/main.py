@@ -17,4 +17,4 @@ api = create_app(settings=settings)
 
 
 def start():
-    uvicorn.run("app.main:api", host="localhost", port=8000, reload=True)
+    uvicorn.run("app.main:api", host="localhost", port=settings.PORT, reload=True)

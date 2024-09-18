@@ -34,7 +34,7 @@ class JWTRepo:
             )
             return decode_token if decode_token["exp"] >= time.time() else None
         except:
-            return {}
+            return None
 
     @staticmethod
     def extract_token(token: str):

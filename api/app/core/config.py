@@ -13,6 +13,7 @@ if path.isfile(dotenv_file):
 
 
 class Settings(BaseSettings):
+    PORT: int = 8000
     API_V1_STR: str = "/v1"
     DATABASE_URL: str
     DEVELOPMENT_MODE: bool = True
