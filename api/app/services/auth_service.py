@@ -19,7 +19,7 @@ class AuthService:
     @staticmethod
     async def register_service(session: Session, register: RegisterSchema):
         # checking if email is created already exists
-        exist_user = UserRepo.find_by_email(session=session, email=register.email)
+        exist_user = await UserRepo.find_by_email(session=session, email=register.email)
         if exist_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists"
@@ -31,7 +31,7 @@ class AuthService:
         # mapping request data to class entity table
         _person = Person(
             name=register.name,
-            birth=register.birth,
+            birth=birth_date,
             sex=register.sex,
             profile="",
             phone_number=register.phone_number,
@@ -40,7 +40,7 @@ class AuthService:
 
         _user = User(
             email=register.email,
-            password=pwd_context(register.password),
+            password=pwd_context.hash(register.password),
             person_id=_person.id,
         )
         _user = await UserRepo.create(session=session, **_user.model_dump())
@@ -49,6 +49,8 @@ class AuthService:
         _users_role = UsersRole(user_id=_user.id, role_id=_role.id)
 
         await UsersRoleRepo.create(session=session, **_users_role.model_dump())
+
+        return JWTRepo(data={"id": _user.id}).generate_token()
 
     @staticmethod
     async def login_service(session: Session, login: LoginSchema):
@@ -80,7 +82,7 @@ class AuthService:
             )
 
         await UserRepo.update_password(
-            session=Session,
+            session=session,
             email=forgotPassword.email,
-            new_password=pwd_context(forgotPassword.new_password),
+            new_password=pwd_context.hash(forgotPassword.new_password),
         )

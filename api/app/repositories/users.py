@@ -1,4 +1,4 @@
-from sqlmodel import Session, select, update as sql_update
+from sqlmodel import Session, select, update as sql_update, delete as sql_delete
 
 from ..models.person import User
 from .base import BaseRepo
