@@ -1,10 +1,14 @@
 import time
-from fastapi import HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials
+from fastapi import HTTPException, status, Depends, Response
+from fastapi.security import APIKeyCookie
+from sqlmodel import Session
 from datetime import timedelta, datetime, timezone
 from jose.jwt import encode, decode
+from jose.exceptions import ExpiredSignatureError, JWTError
 
 from ..core.config import settings
+from ..core.db import get_session
+from ..services.user_service import UserService
 
 
 class JWTRepo:
@@ -25,7 +29,7 @@ class JWTRepo:
             to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
         )
 
-        return encode_jwt
+        return encode_jwt, expires
 
     def decode_token(self):
         try:
@@ -41,46 +45,57 @@ class JWTRepo:
         return decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
 
 
-class JWTBearer(HTTPException):
-    def __init__(self, auto_error: bool = True):
-        super(JWTBearer, self).__init__(auto_error=auto_error)
+def verify_jwt(jwt_token: str):
+    decode_info = decode(
+        jwt_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+    )
+    return decode_info if decode_info is not None else None
 
-    async def __call__(self, request: Request):
-        credentials: HTTPAuthorizationCredentials = await super(
-            JWTBearer, self
-        ).__call__(request)
-        if credentials:
-            if credentials.scheme != "Bearer":
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail={
-                        "status": "Forbidden",
-                        "message": "Invalid authentication schema.",
-                    },
-                )
-            if not self.verify_jwt(credentials.credentials):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail={
-                        "status": "Forbidden",
-                        "message": "Invalid token or expired token.",
-                    },
-                )
-            return credentials.credentials
-        else:
+
+async def get_auth_user(
+    response: Response,
+    access_token: str = Depends(APIKeyCookie(name="access_token", auto_error=True)),
+    session: Session = Depends(get_session),
+):
+    try:
+        credentials = verify_jwt(access_token)
+        if not credentials:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     "status": "Forbidden",
-                    "message": "Invalid authorization code.",
+                    "message": "Invalid token or expired token.",
                 },
             )
 
-    @staticmethod
-    def verify_jwt(jwt_token: str):
-        return (
-            True
-            if decode(jwt_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-            is not None
-            else False
+        if credentials["exp"] < time.time():
+            response.delete_cookie(key="access_token")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "status": "Forbidden",
+                    "message": "Expired token",
+                },
+            )
+
+        user = await UserService.get_user_profile(
+            session=session, user_id=credentials["id"]
+        )
+        return user
+
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "status": "Forbidden",
+                "message": "Token is invalid",
+            },
+        )
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "status": "Forbidden",
+                "message": "Expired token",
+            },
         )

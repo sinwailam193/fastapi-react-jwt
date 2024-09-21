@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Response, status
 from sqlmodel import Session
+from datetime import datetime
 
 from ..core.db import get_session
+from ..core.config import settings
 from ..schemas.auth_schema import (
     ResponseSchema,
     RegisterSchema,
@@ -21,9 +23,11 @@ async def register(
     response: Response,
     session: Session = Depends(get_session),
 ):
-    token = await AuthService.register_service(session=session, register=register_body)
+    token, expires = await AuthService.register_service(
+        session=session, register=register_body
+    )
 
-    response.set_cookie(key="access_token", value=token, httponly=True)
+    response.set_cookie(key="access_token", value=token, httponly=True, expires=expires)
 
     return ResponseSchema(detail="Successful create")
 
@@ -32,9 +36,9 @@ async def register(
 async def login(
     login_body: LoginSchema, response: Response, session: Session = Depends(get_session)
 ):
-    token = await AuthService.login_service(session=session, login=login_body)
+    token, expires = await AuthService.login_service(session=session, login=login_body)
 
-    response.set_cookie(key="access_token", value=token, httponly=True)
+    response.set_cookie(key="access_token", value=token, httponly=True, expires=expires)
 
     return ResponseSchema(detail="Successful login")
 

@@ -1,9 +1,9 @@
-import base64
 from fastapi import status, HTTPException
-from datetime import datetime
+from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from sqlmodel import Session
 
+from ..core.config import settings
 from ..schemas.auth_schema import RegisterSchema, LoginSchema, ForgotPasswordSchema
 from ..models.person import Person, User, UsersRole
 from ..repositories.role import RoleRepo
@@ -50,7 +50,9 @@ class AuthService:
 
         await UsersRoleRepo.create(session=session, **_users_role.model_dump())
 
-        return JWTRepo(data={"id": _user.id}).generate_token()
+        return JWTRepo(data={"id": _user.id}).generate_token(
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
 
     @staticmethod
     async def login_service(session: Session, login: LoginSchema):
@@ -66,7 +68,9 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Password is invalid"
             )
 
-        return JWTRepo(data={"id": _user.id}).generate_token()
+        return JWTRepo(data={"id": _user.id}).generate_token(
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
 
     @staticmethod
     async def fogot_password_service(
