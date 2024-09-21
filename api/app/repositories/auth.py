@@ -9,6 +9,7 @@ from jose.exceptions import ExpiredSignatureError, JWTError
 from ..core.config import settings
 from ..core.db import get_session
 from ..services.user_service import UserService
+from ..repositories.users import UserRepo
 
 
 class JWTRepo:
@@ -81,6 +82,7 @@ async def get_auth_user(
         user = await UserService.get_user_profile(
             session=session, user_id=credentials["id"]
         )
+
         return user
 
     except JWTError:
@@ -99,3 +101,6 @@ async def get_auth_user(
                 "message": "Expired token",
             },
         )
+
+
+CurrentUser = Depends(get_auth_user)

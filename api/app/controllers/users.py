@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, Security
-from fastapi.security import HTTPAuthorizationCredentials, APIKeyCookie
-from sqlmodel import Session
+from fastapi import APIRouter
 
-from ..repositories.auth import get_auth_user
+from ..repositories.auth import CurrentUser
 from ..models.person import User
 
 router = APIRouter()
 
 
 @router.get("")
-async def register_user(user: User = Depends(get_auth_user)):
+async def register_user(user=CurrentUser):
+
     return user

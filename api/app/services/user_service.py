@@ -8,6 +8,7 @@ class UserService:
     async def get_user_profile(session: Session, user_id: int):
         query = (
             select(
+                User.id,
                 User.email,
                 Person.name,
                 Person.birth,
