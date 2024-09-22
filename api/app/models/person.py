@@ -17,6 +17,15 @@ class UsersRole(SQLModel, TimeMixin, table=True):
     role_id: int = Field(foreign_key="roles.id", primary_key=True)
 
 
+class RefreshToken(SQLModel, TimeMixin, table=True):
+    __tablename__ = "refresh_token"
+
+    id: int = Field(None, primary_key=True, nullable=False)
+    token: str = Field(sa_column=Column("token", String, unique=True))
+    user_id: int = Field(foreign_key="users.id")
+    expires: int
+
+
 class Role(SQLModel, TimeMixin, table=True):
     __tablename__ = "roles"
 
