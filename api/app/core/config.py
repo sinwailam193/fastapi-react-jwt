@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = ALGORITHMS.HS256
 
     # Auth setting
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 183  # this is about 6 months
 
 
 settings = Settings()

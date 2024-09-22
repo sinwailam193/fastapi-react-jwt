@@ -5,12 +5,13 @@ from sqlmodel import Session
 
 from ..core.config import settings
 from ..schemas.auth_schema import RegisterSchema, LoginSchema, ForgotPasswordSchema
-from ..models.person import Person, User, UsersRole
+from ..models.person import Person, User, UsersRole, RefreshToken
 from ..repositories.role import RoleRepo
 from ..repositories.person import PersonRepo
 from ..repositories.users import UserRepo
 from ..repositories.users_role import UsersRoleRepo
-from ..repositories.auth import JWTRepo
+from ..repositories.refresh_token import RefreshTokenRepo
+from ..repositories.auth import JWTRepo, TokenType
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -50,9 +51,23 @@ class AuthService:
 
         await UsersRoleRepo.create(session=session, **_users_role.model_dump())
 
-        return JWTRepo(data={"id": _user.id}).generate_token(
-            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token, access_expires = JWTRepo(data={"id": _user.id}).generate_token(
+            type=TokenType.ACCESS,
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         )
+        refresh_token, refresh_expires = JWTRepo(data={"id": _user.id}).generate_token(
+            type=TokenType.REFRESH,
+            expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        )
+
+        _new_refresh_token = RefreshToken(
+            user_id=_user.id, token=refresh_token, expires=refresh_expires
+        )
+        await RefreshTokenRepo.create(
+            session=session, **_new_refresh_token.model_dump()
+        )
+
+        return access_token, access_expires, refresh_token, refresh_expires
 
     @staticmethod
     async def login_service(session: Session, login: LoginSchema):
@@ -68,9 +83,45 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Password is invalid"
             )
 
-        return JWTRepo(data={"id": _user.id}).generate_token(
-            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token, access_expires = JWTRepo(data={"id": _user.id}).generate_token(
+            type=TokenType.ACCESS,
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         )
+        refresh_token, refresh_expires = JWTRepo(data={"id": _user.id}).generate_token(
+            type=TokenType.REFRESH,
+            expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        )
+
+        exist_token = await RefreshTokenRepo.find_by_user_id(
+            session=session, user_id=_user.id
+        )
+        if exist_token:
+            exist_token.token = refresh_token
+            exist_token.expires = refresh_expires.timestamp()
+            session.add(exist_token)
+            session.commit()
+        else:
+            _new_refresh_token = RefreshToken(
+                user_id=_user.id,
+                token=refresh_token,
+                expires=refresh_expires.timestamp(),
+            )
+            await RefreshTokenRepo.create(
+                session=session, **_new_refresh_token.model_dump()
+            )
+
+        return access_token, access_expires, refresh_token, refresh_expires
+
+    @staticmethod
+    async def refresh_access_token(refresh_token: RefreshToken):
+        access_token, access_expires = JWTRepo(
+            data={"id": refresh_token.user_id}
+        ).generate_token(
+            type=TokenType.ACCESS,
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        )
+
+        return access_token, access_expires
 
     @staticmethod
     async def fogot_password_service(
