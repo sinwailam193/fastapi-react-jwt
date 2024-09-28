@@ -61,7 +61,7 @@ class AuthService:
         )
 
         _new_refresh_token = RefreshToken(
-            user_id=_user.id, token=refresh_token, expires=refresh_expires
+            user_id=_user.id, token=refresh_token, expires=refresh_expires.timestamp()
         )
         await RefreshTokenRepo.create(
             session=session, **_new_refresh_token.model_dump()

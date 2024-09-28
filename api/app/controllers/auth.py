@@ -57,7 +57,7 @@ async def login(
 
 
 @router.get("/refresh", response_model=ResponseSchema)
-async def refres_access_token(
+async def refresh_access_token(
     response: Response, refresh_token: RefreshToken = CurrentRefreshToken
 ):
     access_token, access_expires = await AuthService.refresh_access_token(
