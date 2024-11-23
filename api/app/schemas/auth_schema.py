@@ -1,5 +1,4 @@
 import logging
-import re
 from fastapi import HTTPException
 from typing import TypeVar
 from pydantic import BaseModel, field_validator, EmailStr

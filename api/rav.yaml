@@ -1,3 +1,4 @@
 scripts:
-    server: uvicorn app.main:start
+    server: uvicorn app.main:api --reload --port 8000
+    prod:server: gunicorn app.main:api --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
     migrate: alembic upgrade head

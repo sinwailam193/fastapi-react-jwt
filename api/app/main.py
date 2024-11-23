@@ -14,7 +14,3 @@ def create_app(settings: Settings):
 
 
 api = create_app(settings=settings)
-
-
-def start():
-    uvicorn.run("app.main:api", host="localhost", port=settings.PORT, reload=True)
