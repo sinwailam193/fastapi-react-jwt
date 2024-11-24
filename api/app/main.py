@@ -1,4 +1,3 @@
-import uvicorn
 from fastapi import FastAPI
 
 from .core.config import settings, Settings
